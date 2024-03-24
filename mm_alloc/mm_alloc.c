@@ -37,9 +37,9 @@ void* mm_malloc(size_t size) {
         new_metadata.prev = curr_metadata;
         new_metadata.next = curr_metadata->next;
         new_metadata.free = true;
-        void* new_addr = (void*)curr_metadata + METADATA_SIZE + curr_metadata->size;
+        void* new_addr = (void*)curr_metadata + METADATA_SIZE + size;
         //add node into memory
-        memcpy(new_addr, &new_metadata, sizeof(struct metadata));
+        memcpy(new_addr, &new_metadata, METADATA_SIZE);
         //set all data to zero 
         memset(new_addr + METADATA_SIZE, 0, leftover);
 
