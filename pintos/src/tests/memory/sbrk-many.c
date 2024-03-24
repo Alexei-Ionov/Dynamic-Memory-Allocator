@@ -7,14 +7,17 @@
 #define MEBI (1 << 20)
 
 void test_main(void) {
+
   unsigned char* heap = sbrk(0);
   for (int i = 0; i != MEBI; i++) {
+    // printf("%d    ", i);
     unsigned char* extended = sbrk(1);
     ASSERT(extended != (void*)-1);
     ASSERT(i == (int)(extended - heap));
   }
-
+  // printf("p1\n");
   memset(heap, 162, MEBI);
+  // printf("p2\n");
   for (int i = 0; i != MEBI; i++) {
     ASSERT(heap[i] == 162);
   }

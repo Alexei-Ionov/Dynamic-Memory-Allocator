@@ -52,6 +52,7 @@ void test_main(void) {
   unsigned char* heap = sbrk(0);
   int offset = 0;
   for (int i = 0; i != NUM_DELTAS; i++) {
+    // printf("offset: %d\n", offset);
     offset += deltas[i];
     ASSERT(offset >= 0);
     test_delta(heap, deltas[i], (size_t)offset);

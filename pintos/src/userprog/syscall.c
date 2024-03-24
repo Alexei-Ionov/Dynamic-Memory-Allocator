@@ -75,6 +75,11 @@ static void syscall_close(int fd) {
     t->open_file = NULL;
   }
 }
+void* syscall_sbrk(intptr_t increment) { 
+  return sbrk(increment);
+}
+
+
 
 static void syscall_handler(struct intr_frame* f) {
   uint32_t* args = (uint32_t*)f->esp;
@@ -83,6 +88,9 @@ static void syscall_handler(struct intr_frame* f) {
 
   validate_buffer_in_user_region(args, sizeof(uint32_t));
   switch (args[0]) {
+    case SYS_SBRK:
+      f->eax = syscall_sbrk((intptr_t) args[1]);
+      break;
     case SYS_EXIT:
       validate_buffer_in_user_region(&args[1], sizeof(uint32_t));
       syscall_exit((int)args[1]);
