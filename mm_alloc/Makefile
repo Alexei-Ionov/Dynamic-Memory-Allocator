@@ -1,4 +1,4 @@
-CFLAGS=-g3 -Wall -Werror -Wextra -std=c99 -D_POSIX_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=700 -fPIC -Wno-unused-variable
+CFLAGS=-g3 -Wall -Werror -Wextra -std=c99 -D_POSIX_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=700 -fPIC
 TEST_CFLAGS=-Wl,-rpath=.
 TEST_LDFLAGS=-ldl
 
