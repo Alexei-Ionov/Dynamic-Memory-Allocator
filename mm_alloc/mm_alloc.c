@@ -85,7 +85,12 @@ void* mm_realloc(void* ptr, size_t size) {
   //set it equal to free temporarily just for mm_alloc
   m->free = true;
   void *new_addr = mm_malloc(size);
-  m->free = false;
+
+  //in the case where the same block gets used (such as in the case where smaller size reallocation)
+  if (new_addr == ptr) { 
+    m->free = false;
+  }
+ 
   if (new_addr == NULL) { 
     return NULL;
   }
@@ -108,7 +113,7 @@ void mm_free(void* ptr) {
   void *metadata_addr = ptr - METADATA_SIZE;
   struct metadata *m = (struct metadata*)metadata_addr;
   
-  //can't free memory that's already used!
+  //can't free memory that's already been freed!
   if (m->free) { 
     return;
   }
