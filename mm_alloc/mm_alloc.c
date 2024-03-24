@@ -30,7 +30,7 @@ void* mm_malloc(size_t size) {
     if (curr_metadata->free && curr_metadata->size >= size) { 
       //if we can split it into two nodes
       leftover = curr_metadata->size - (size + METADATA_SIZE);
-      if (leftover > 0) { 
+      if (leftover >= 0) { 
         //create new metadata node
         struct metadata new_metadata;
         new_metadata.size = leftover;
