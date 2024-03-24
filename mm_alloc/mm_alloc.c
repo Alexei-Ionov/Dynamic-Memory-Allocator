@@ -21,7 +21,7 @@ void* mm_malloc(size_t size) {
   if (heap_start == NULL) { 
     heap_start = sbrk(0);
   }
-  size_t leftover;
+  int leftover;
   void* curr_ptr = heap_start;
   void* seg_break = sbrk(0);
   struct metadata *curr_metadata = NULL;
