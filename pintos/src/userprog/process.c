@@ -75,9 +75,9 @@ void* palloc_pages(int num_pages_to_palloc) {
     //   pagedir_clear_page(thread_current()->pagedir, seg_break);
     // }
     kpage = palloc_get_page(PAL_USER | PAL_ZERO);
-    if (kpage == NULL) { 
-      printf("kpage is null\n");
-    }
+    // if (kpage == NULL) { 
+    //   printf("kpage is null\n");
+    // }
     if (kpage == NULL || (!pagedir_set_page(thread_current()->pagedir, seg_break, kpage , true))) { 
       for (int j = 0; j < i; j++) { 
         seg_break -= PGSIZE;
