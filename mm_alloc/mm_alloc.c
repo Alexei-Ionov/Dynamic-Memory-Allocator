@@ -105,10 +105,15 @@ void* mm_realloc(void* ptr, size_t size) {
     mm_free(ptr);
     return NULL;
   }
+  //this way we dont create a massive buf before checking whetehr the size isnt too big
+  if (sbrk(size) == NULL) { 
+    return NULL;
+  }
   /*
   create a temporoary buffer to hold the value at the previous block. reason why, is that in the case where we re-use the same block, 
   within malloc, we actually zero out all the contents of the block so we technically lose all that data. 
   */
+
   char buf[size];
   memcpy(&buf, ptr, size);
   void *metadata_addr = ptr - METADATA_SIZE;

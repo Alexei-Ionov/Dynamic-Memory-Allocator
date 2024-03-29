@@ -41,19 +41,25 @@ static void load_alloc_functions() {
   mm_free = try_dlsym(handle, "mm_free");
 }
 static void test_free() { 
-  char* block1 = mm_malloc(1);
-  char* block2 = mm_malloc(2);
-  char* block3 = mm_malloc(3);
-  char* block4 = mm_malloc(4);
-  assert(block1 != NULL);
-  assert(block2 != NULL);
-  assert(block3 != NULL);
-  assert(block4 != NULL);
+  char* P = mm_malloc(100);
+  printf("start of P data: %p\n", P);
+  char* Q = mm_malloc(100);
   
-  mm_free((void*) block1);
-  mm_free((void*) block2);
-  mm_free((void*) block3);
-  mm_free((void*) block4);
+  assert(P != NULL);
+  assert(Q != NULL);
+  char* P_new = mm_realloc(P, 200);
+  assert(P_new != NULL);
+  char* S = mm_malloc(100);
+  assert(S != NULL);
+  printf("S data: %p\n", S);
+
+
+  
+  
+  // mm_free((void*) block1);
+  // mm_free((void*) block2);
+  // mm_free((void*) block3);
+  // mm_free((void*) block4);
   // mm_free((void*) small1);
   // mm_free((void*) small2);
 
