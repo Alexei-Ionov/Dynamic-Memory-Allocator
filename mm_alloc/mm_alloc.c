@@ -33,6 +33,8 @@ void* mm_malloc(size_t size) {
     if (curr_metadata->free && curr_metadata->size >= size) { 
       //if we can split it into two nodes
       leftover = curr_metadata->size - (size + METADATA_SIZE);
+      //zero out the entire block first, regardless of whether we are adding in a new one or not
+      memset(curr_metadata + METADATA_SIZE, 0, curr_metadata->size);
       if (leftover >= 0) { 
         //create new metadata node
         struct metadata new_metadata;
@@ -43,16 +45,13 @@ void* mm_malloc(size_t size) {
         void* new_addr = (void*)curr_metadata + METADATA_SIZE + curr_metadata->size;
         //add node into memory
         memcpy(new_addr, &new_metadata, METADATA_SIZE);
-        //set all data to zero 
+        //set all data to zero, redundant
         memset(new_addr + METADATA_SIZE, 0, leftover);
 
         //change pointers for the current and next nodes
         curr_metadata->next->prev = new_addr;
         curr_metadata->next = new_addr;
-        memset((void*)curr_metadata + METADATA_SIZE, 0, size); //zero out the block taking into account the new additionoal block
-      } else { 
-        memset((void*)curr_metadata + METADATA_SIZE, 0, curr_metadata->size); //zero out the entire new block to be used
-      }
+      } 
       curr_metadata->size = size;
       curr_metadata->free = false;
       return (void*)curr_metadata + METADATA_SIZE;
@@ -86,7 +85,12 @@ void* mm_realloc(void* ptr, size_t size) {
     mm_free(ptr);
     return NULL;
   }
-
+  /*
+  create a temporoary buffer to hold the value at the previous block. reason why, is that in the case where we re-use the same block, 
+  within malloc, we actually zero out all the contents of the block so we technically lose all that data. 
+  */
+  char buf[size];
+  memcpy(&buf, ptr, size);
   void *metadata_addr = ptr - METADATA_SIZE;
   struct metadata *prev_metadata = (struct metadata*)metadata_addr;
   
@@ -101,21 +105,28 @@ void* mm_realloc(void* ptr, size_t size) {
   if (new_addr == ptr) { 
     //if requested size is smaller 
     prev_metadata->free = false;
+    //unneccsarry cleaning
     if (size < prev_metadata->size) {
       memset(new_addr + size, 0, prev_metadata->size - size);
     }
+    memcpy(new_addr, &buf, size);
     return new_addr;
   }
-  void *new_metadata_addr = new_addr - METADATA_SIZE;
-  struct metadata *new_metadata = (struct metadata*)new_metadata_addr;
+  // void *new_metadata_addr = new_addr - METADATA_SIZE;
+  // struct metadata *new_metadata = (struct metadata*)new_metadata_addr;
 
-  //otherwise, we found a new block or created a new block!!!! ORR
+  //otherwise, we found a new block or created a new block!!!! 
   //copy over contents of previous block to new block
-  memcpy(new_addr, ptr, size);
-  if (size < new_metadata->size) {
-    //zero out the leftover bytes since the new block is actually bigger than what we need 
-    memset(new_addr + size, 0, new_metadata->size - size);
-  } 
+  if (size < prev_metadata->size) {
+    memcpy(new_addr, ptr, size); // we copy only up to the min(size, prev block size) number of bytes
+  } else { 
+    memcpy(new_addr, ptr, prev_metadata->size); //otherwise if the requested size is bigger, we should copy over the entire thing. 
+  }
+  
+  // if (size < new_metadata->size) {
+  //   //zero out the leftover bytes since the new block is actually bigger than what we need 
+  //   memset(new_addr + size, 0, new_metadata->size - size);
+  // } 
   mm_free(ptr);
   return new_addr;
 }
