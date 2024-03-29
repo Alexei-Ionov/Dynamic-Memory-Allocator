@@ -45,6 +45,9 @@ static void test_free() {
   assert(data != NULL);
   // int* beginnning = data - METADATA_SIZE;
   memset(data, 162, 5);
+  for (int i = 0; i < 5; i++) {
+    printf("%d\n", data[i]);
+  }
   // for (int i = 0; i < 4095; i++) { 
   //   printf("i %d\n", i);
   //   printf("beginning[i] %d\n", beginnning[i]);

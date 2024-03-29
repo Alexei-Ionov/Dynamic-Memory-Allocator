@@ -22,11 +22,13 @@ void* mm_malloc(size_t size) {
   if (heap_start == NULL) { 
     heap_start = sbrk(0);
   }
+  
   int leftover;
   void* curr_ptr = heap_start;
   void* seg_break = sbrk(0);
+  int inc = 0;
   struct metadata *curr_metadata = NULL;
-  while (curr_ptr < seg_break) { 
+  while ((curr_ptr + inc) < seg_break) { 
     curr_metadata = (struct metadata*)curr_ptr;
     if (curr_metadata->free && curr_metadata->size >= size) { 
       //if we can split it into two nodes
@@ -52,8 +54,8 @@ void* mm_malloc(size_t size) {
       curr_metadata->free = false;
       return (void*)curr_metadata + METADATA_SIZE;
     }
-    curr_ptr += (METADATA_SIZE + curr_metadata->size);
-  }
+    inc += (METADATA_SIZE + curr_metadata->size);
+  } 
   void *addr = sbrk(size + METADATA_SIZE);
   if (addr == (void*)-1) { 
     return NULL;
@@ -68,6 +70,7 @@ void* mm_malloc(size_t size) {
   memcpy(addr, &new_metadata, METADATA_SIZE);
   //set all data to zero 
   memset(addr + METADATA_SIZE, 0, size);
+ 
 
   return addr + METADATA_SIZE;
 }
