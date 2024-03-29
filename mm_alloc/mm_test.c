@@ -41,13 +41,25 @@ static void load_alloc_functions() {
   mm_free = try_dlsym(handle, "mm_free");
 }
 static void test_free() { 
-  int* data = mm_malloc(100);
-  assert(data != NULL);
-  // int* beginnning = data - METADATA_SIZE;
-  memset(data, 162, 100);
-  for (int i = 0; i < 100; i++) {
-    printf("%d\n", data[i]);
-  }
+  char* large1 = mm_malloc(200);
+  char* large2 = mm_malloc(100);
+  assert(large1 != NULL);
+  assert(large2 != NULL);
+  mm_free((void*) large1);
+  char* small1 = mm_malloc(50);
+  assert(small1 != NULL);
+  char* small2 = mm_malloc(50);
+  assert(small2 != NULL);
+  // mm_free((void*) large2);
+  // mm_free((void*) small1);
+  // mm_free((void*) small2);
+
+
+
+
+
+
+  
   // for (int i = 0; i < 4095; i++) { 
   //   printf("i %d\n", i);
   //   printf("beginning[i] %d\n", beginnning[i]);

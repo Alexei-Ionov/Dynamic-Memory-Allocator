@@ -10,7 +10,7 @@
 #include <string.h>
 #include <stdbool.h>
 #define METADATA_SIZE sizeof(struct metadata)
-
+#include <assert.h>
 
 void* heap_start = NULL;
 
@@ -26,15 +26,26 @@ void* mm_malloc(size_t size) {
   int leftover;
   void* curr_ptr = heap_start;
   void* seg_break = sbrk(0);
-  int inc = 0;
+  unsigned int inc = 0;
   struct metadata *curr_metadata = NULL;
+  // if (curr_ptr != seg_break) {
+  //   primntf("curr_ptr %p\n", curr_ptr);
+  //   printf("seg break %p\n", seg_break);
+  // }
+  // printf("curr_ptr %p\n", curr_ptr);
+  // printf("seg break %p\n", seg_break);
+  
   while ((curr_ptr + inc) < seg_break) { 
     curr_metadata = (struct metadata*)curr_ptr;
-    if (curr_metadata->free && curr_metadata->size >= size) { 
+    if (curr_metadata->free && curr_metadata->size >= size) {
+
+      
       //if we can split it into two nodes
       leftover = curr_metadata->size - (size + METADATA_SIZE);
       //zero out the entire block first, regardless of whether we are adding in a new one or not
+    
       memset(curr_metadata + METADATA_SIZE, 0, curr_metadata->size);
+     
       if (leftover >= 0) { 
         //create new metadata node
         struct metadata new_metadata;
@@ -45,36 +56,47 @@ void* mm_malloc(size_t size) {
         void* new_addr = (void*)curr_metadata + METADATA_SIZE + size;
         //add node into memory
         memcpy(new_addr, &new_metadata, METADATA_SIZE);
+      
         // //set all data to zero, redundant
         // memset(new_addr + METADATA_SIZE, 0, leftover);
 
         //change pointers for the current and next nodes
-        curr_metadata->next->prev = new_addr;
+        if (curr_metadata->next != NULL) {
+          curr_metadata->next->prev = new_addr;
+        }
+       
         curr_metadata->next = new_addr;
+    
       } 
+   
       curr_metadata->size = size;
       curr_metadata->free = false;
       return (void*)curr_metadata + METADATA_SIZE;
     }
     inc += (METADATA_SIZE + curr_metadata->size);
   } 
-  void *addr = sbrk(size + METADATA_SIZE);
-  if (addr == (void*)-1) { 
+  void *new_metadata_addr = sbrk(size + METADATA_SIZE);
+  if (new_metadata_addr == (void*)-1) { 
     return NULL;
   }
+
   struct metadata new_metadata;
   new_metadata.size = size;
-  new_metadata.prev = (curr_metadata == NULL) ? NULL : curr_metadata; //if its the first node then prev is NULL
+  new_metadata.prev = NULL; //gets overwritten if this isn't tjhe first block
+  if (curr_metadata != NULL) { //if this isnt the first block to be added
+    curr_metadata->next = new_metadata_addr;
+    new_metadata.prev = curr_metadata;
+  }
   new_metadata.next = NULL;
   new_metadata.free = false;
 
   //add node into memory
-  memcpy(addr, &new_metadata, METADATA_SIZE);
+  memcpy(new_metadata_addr, &new_metadata, METADATA_SIZE);
   //set all data to zero 
-  memset(addr + METADATA_SIZE, 0, size);
+  memset(new_metadata_addr + METADATA_SIZE, 0, size);
  
 
-  return addr + METADATA_SIZE;
+  return new_metadata_addr + METADATA_SIZE;
 }
 
 void* mm_realloc(void* ptr, size_t size) {
