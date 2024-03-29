@@ -89,7 +89,6 @@ void* palloc_pages(int num_pages_to_palloc) {
     kpage = palloc_get_page(PAL_USER | PAL_ZERO);
 
     if (kpage == NULL || (!pagedir_set_page(thread_current()->pagedir, upage, kpage , true))) { 
-      ASSERT(1 == 2);
       if (kpage != NULL) {
         palloc_free_page(pagedir_get_page(thread_current()->pagedir, upage));
         i -= 1;
