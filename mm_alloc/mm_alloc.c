@@ -42,11 +42,11 @@ void* mm_malloc(size_t size) {
         new_metadata.prev = curr_metadata;
         new_metadata.next = curr_metadata->next;
         new_metadata.free = true;
-        void* new_addr = (void*)curr_metadata + METADATA_SIZE + curr_metadata->size;
+        void* new_addr = (void*)curr_metadata + METADATA_SIZE + size;
         //add node into memory
         memcpy(new_addr, &new_metadata, METADATA_SIZE);
-        //set all data to zero, redundant
-        memset(new_addr + METADATA_SIZE, 0, leftover);
+        // //set all data to zero, redundant
+        // memset(new_addr + METADATA_SIZE, 0, leftover);
 
         //change pointers for the current and next nodes
         curr_metadata->next->prev = new_addr;
@@ -106,9 +106,9 @@ void* mm_realloc(void* ptr, size_t size) {
     //if requested size is smaller 
     prev_metadata->free = false;
     //unneccsarry cleaning
-    if (size < prev_metadata->size) {
-      memset(new_addr + size, 0, prev_metadata->size - size);
-    }
+    // if (size < prev_metadata->size) {
+    //   memset(new_addr + size, 0, prev_metadata->size - size);
+    // }
     memcpy(new_addr, &buf, size);
     return new_addr;
   }
