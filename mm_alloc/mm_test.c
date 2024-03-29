@@ -3,10 +3,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
 /* Function pointers to hw3 functions */
 void* (*mm_malloc)(size_t);
 void* (*mm_realloc)(void*, size_t);
 void (*mm_free)(void*);
+struct metadata { 
+  size_t size;
+  struct metadata* prev;
+  struct metadata* next;
+  bool free;
+};
+#define METADATA_SIZE sizeof(struct metadata)
 
 static void* try_dlsym(void* handle, const char* symbol) {
   char* error;
@@ -29,14 +40,34 @@ static void load_alloc_functions() {
   mm_realloc = try_dlsym(handle, "mm_realloc");
   mm_free = try_dlsym(handle, "mm_free");
 }
+static void test_free() { 
+  int* data = mm_malloc(20);
+  assert(data != NULL);
+  // int* beginnning = data - METADATA_SIZE;
+  memset(data, 162, 5);
+  // for (int i = 0; i < 4095; i++) { 
+  //   printf("i %d\n", i);
+  //   printf("beginning[i] %d\n", beginnning[i]);
+  // }
+  
+  // int* data2 = mm_malloc(200);
+  // assert(mdata2 != NULL);
+  // mm_free((void*) data);
+  // mm_free((void *) data2);
+  // mm_free(data2);
 
+}
+// static void test_realloc() { 
+//   int* data = mm_malloc(100);
+//   assert(data != NULL);
+//   int* data2 = mm_malloc(200);
+//   assert(data2 != NULL);
+//   assert(mm_realloc(data, 50) == (void*)1);
+//   // mm_free(data2);
+// }
 int main() {
   load_alloc_functions();
-
-  int* data = mm_malloc(sizeof(int));
-  assert(data != NULL);
-  data[0] = 0x162;
-
-  mm_free(data);
+  // test_realloc();
+  test_free();
   puts("malloc test successful!");
 }

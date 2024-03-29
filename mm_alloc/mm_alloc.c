@@ -18,6 +18,7 @@ void* mm_malloc(size_t size) {
   if (size == 0) { 
     return NULL;
   }
+
   if (heap_start == NULL) { 
     heap_start = sbrk(0);
   }
@@ -48,7 +49,7 @@ void* mm_malloc(size_t size) {
         curr_metadata->next = new_addr;
       }
       curr_metadata->size = size;
-      curr_metadata->free = true;
+      curr_metadata->free = false;
       return (void*)curr_metadata + METADATA_SIZE;
     }
     curr_ptr += (METADATA_SIZE + curr_metadata->size);
@@ -82,13 +83,17 @@ void* mm_realloc(void* ptr, size_t size) {
 
   void *metadata_addr = ptr - METADATA_SIZE;
   struct metadata *m = (struct metadata*)metadata_addr;
+  
   //set it equal to free temporarily just for mm_alloc
   m->free = true;
+  return (void*)1;
   void *new_addr = mm_malloc(size);
+  return new_addr;
 
   //in the case where the same block gets used (such as in the case where smaller size reallocation)
   if (new_addr == ptr) { 
     m->free = false;
+    return (void*)1;
   }
  
   if (new_addr == NULL) { 
