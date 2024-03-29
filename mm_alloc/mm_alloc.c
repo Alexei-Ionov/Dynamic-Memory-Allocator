@@ -166,19 +166,18 @@ void mm_free(void* ptr) {
   void *metadata_addr = ptr - METADATA_SIZE;
   struct metadata *m = (struct metadata*)metadata_addr;
 
-  struct metadata* leftmost = m;
-  struct metadata* rightmost = m;
+  
   size_t total_size_to_free = 0;
   bool left = m->prev != NULL && m->prev->free;
   bool right = m->next != NULL && m->next->free;
   if (left) { 
     total_size_to_free += (METADATA_SIZE + m->size);
-    leftmost = m->prev;
   }
   if (right) { 
-    rightmost = m->next;
-    total_size_to_free += (METADATA_SIZE + rightmost->size);
+    total_size_to_free += (METADATA_SIZE + m->next->size);
   }
+  struct metadata* leftmost = left ? m->prev : m;
+  struct metadata* rightmost = right ? m->next : m;
   free_block(leftmost, rightmost, total_size_to_free);
   
 }
