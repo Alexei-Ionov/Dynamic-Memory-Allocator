@@ -109,10 +109,10 @@ void* mm_realloc(void* ptr, size_t size) {
 }
 
 void free_block(struct metadata *leftmost, struct metadata *rightmost, size_t total_size_to_free) { 
-  leftmost->size = total_size_to_free;
+  leftmost->size = leftmost->size + total_size_to_free;
   leftmost->free = true;
   leftmost->next = rightmost->next; //we are freeing all struct right of the leftmost struct up to and including the rightmost struct
-  memset((void*)leftmost + METADATA_SIZE, 0, total_size_to_free);
+  memset((void*)leftmost + METADATA_SIZE, 0, leftmost->size);
 }
 void mm_free(void* ptr) {
   if (ptr == NULL) { 
@@ -136,11 +136,8 @@ void mm_free(void* ptr) {
     leftmost = m->prev;
   }
   if (right) { 
-    total_size_to_free += (METADATA_SIZE + rightmost->size);
     rightmost = m->next;
-  }
-  if (!left && !right) { 
-    total_size_to_free = m->size;
+    total_size_to_free += (METADATA_SIZE + rightmost->size);
   }
   free_block(leftmost, rightmost, total_size_to_free);
   

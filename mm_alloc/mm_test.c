@@ -41,11 +41,11 @@ static void load_alloc_functions() {
   mm_free = try_dlsym(handle, "mm_free");
 }
 static void test_free() { 
-  int* data = mm_malloc(20);
+  int* data = mm_malloc(100);
   assert(data != NULL);
   // int* beginnning = data - METADATA_SIZE;
-  memset(data, 162, 5);
-  for (int i = 0; i < 5; i++) {
+  memset(data, 162, 100);
+  for (int i = 0; i < 100; i++) {
     printf("%d\n", data[i]);
   }
   // for (int i = 0; i < 4095; i++) { 
