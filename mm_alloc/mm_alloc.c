@@ -108,6 +108,8 @@ void* mm_realloc(void* ptr, size_t size) {
   //this way we dont create a massive buf before checking whetehr the size isnt too big
   if (sbrk(size) == (void*)-1) { 
     return NULL;
+  } else { 
+    sbrk(-size);
   }
   /*
   create a temporoary buffer to hold the value at the previous block. reason why, is that in the case where we re-use the same block, 
