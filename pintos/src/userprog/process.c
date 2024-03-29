@@ -45,18 +45,30 @@ tid_t process_execute(const char* file_name) {
     palloc_free_page(fn_copy);
   return tid;
 }
-int pages_to_palloc(int increment) { 
-  
-  
-  uint8_t *new_break = thread_current()->segment_break + increment;
+int pages_to_palloc(intptr_t increment) { 
+
+  void *new_break = thread_current()->segment_break + increment;
+  // uintptr_t v1 = pg_no(pg_round_up(new_break)) - pg_no(pg_round_up(thread_current()->segment_break));
+  // uintptr_t v2 = (pg_round_up(new_break) - pg_round_up(thread_current()->segment_break)) / PGSIZE;
+  // printf("v1 pages to palloc: %d\n", v1);
+  // printf("v2 pages to palloc: %d\n", v2);
+
   return pg_no(pg_round_up(new_break)) - pg_no(pg_round_up(thread_current()->segment_break));
+  
+  // void* new_break = thread_current()->segment_break + increment;
+  // return (pg_round_up(new_break) - pg_round_up(thread_current()->segment_break)) / PGSIZE;
 }
 
-int pages_to_free(int decrement) { 
-  
-  uint8_t *new_break = thread_current()->segment_break + decrement;
+int pages_to_free(intptr_t decrement) {
+  void *new_break = thread_current()->segment_break + decrement;
+  // uintptr_t v1 = pg_no(pg_round_up(thread_current()->segment_break)) - pg_no(pg_round_up(new_break));
+  // uintptr_t v2 = (pg_round_up(thread_current()->segment_break) - pg_round_up(new_break)) / PGSIZE;
+  // printf("v1 pages to free: %d\n", v1);
+  // printf("v2 pages to free: %d\n", v2);
+
   return pg_no(pg_round_up(thread_current()->segment_break)) - pg_no(pg_round_up(new_break));
- 
+  // void* new_break = thread_current()->segment_break + decrement;
+  // return (pg_round_up(thread_current()->segment_break) - pg_round_up(new_break)) / PGSIZE;
 }
 
 void* palloc_pages(int num_pages_to_palloc) { 
@@ -64,30 +76,35 @@ void* palloc_pages(int num_pages_to_palloc) {
   if (num_pages_to_palloc == 0) { 
     return;
   }
-  uint8_t *seg_break = thread_current()->segment_break;
-  if (pagedir_get_page(thread_current()->pagedir, seg_break) != NULL) { 
-    seg_break = pg_round_up(seg_break);
-  } 
+  void* seg_break = thread_current()->segment_break;
+
   void* kpage;
+  void* upage = pg_round_up(seg_break);
   for (int i = 0; i < num_pages_to_palloc; i++) { 
-    // if (pagedir_get_page(thread_current()->pagedir, seg_break) != NULL) { 
-    //   palloc_free_page(pagedir_get_page(thread_current()->pagedir, seg_break));
-    //   pagedir_clear_page(thread_current()->pagedir, seg_break);
-    // }
+    if (pagedir_get_page(thread_current()->pagedir, upage) != NULL) {
+      palloc_free_page(pagedir_get_page(thread_current()->pagedir, upage));
+      pagedir_clear_page(thread_current()->pagedir, upage);
+    }
+        
     kpage = palloc_get_page(PAL_USER | PAL_ZERO);
-    // if (kpage == NULL) { 
-    //   printf("kpage is null\n");
-    // }
-    if (kpage == NULL || (!pagedir_set_page(thread_current()->pagedir, seg_break, kpage , true))) { 
+
+    if (kpage == NULL || (!pagedir_set_page(thread_current()->pagedir, upage, kpage , true))) { 
+      if (kpage != NULL) {
+        palloc_free_page(pagedir_get_page(thread_current()->pagedir, upage));
+        i -= 1;
+      }
+      upage -= PGSIZE;
       for (int j = 0; j < i; j++) { 
-        seg_break -= PGSIZE;
-        palloc_free_page(pagedir_get_page(thread_current()->pagedir, seg_break));
-        pagedir_clear_page(thread_current()->pagedir, seg_break);
+        // seg_break -= PGSIZE;
+       
+        palloc_free_page(pagedir_get_page(thread_current()->pagedir, upage));
+        pagedir_clear_page(thread_current()->pagedir, upage);
+        upage -= PGSIZE;
         
       }
       return (void *)-1;
     }
-    seg_break += PGSIZE;
+    upage += PGSIZE;
   }
   return (void*)1;
 }
@@ -96,36 +113,51 @@ void free_pages(int num_pages_to_free) {
   if (num_pages_to_free == 0) { 
     return;
   }
-  uint8_t *page_ptr = pg_round_down(thread_current()->segment_break);
+  void* seg_break = thread_current()->segment_break;
+  void *page_ptr = pg_round_down(seg_break);
   void *kpage;
-  for (int i = 0; i < num_pages_to_free; i++) { 
-    pagedir_clear_page(thread_current()->pagedir, page_ptr);
+  for (int i = 0; i < num_pages_to_free; i++) {
     kpage = pagedir_get_page(thread_current()->pagedir, page_ptr);
+    
+    
+    pagedir_clear_page(thread_current()->pagedir, page_ptr);
     palloc_free_page(kpage);
+    
     page_ptr -= PGSIZE;
   }
 }
 void* sbrk(intptr_t increment) { 
-  uint8_t* prev_break = thread_current()->segment_break;
+  // printf("INCREMENT: %d\n", increment);
+
+  void* prev_break = thread_current()->segment_break;
+
   if (increment == 0) { 
-    return prev_break;
+    return thread_current()->segment_break;
   }
+  // void* new_break = prev_break + increment;
   // if (prev_break + increment < thread_current()->heap_start) { 
   //   return (void*)-1;
   // }
+
   int num_pages_to_palloc;
   int num_pages_to_free;
   if (increment > 0) { 
     num_pages_to_palloc = pages_to_palloc(increment);
+    
     // printf("num pages to palloc: %d\n", num_pages_to_palloc);
     if (palloc_pages(pages_to_palloc(increment)) == (void*)-1) {
+      thread_current()->segment_break = prev_break;
       return (void*)-1;
     }
   } else { 
     num_pages_to_free = pages_to_free(increment);
+    // printf("num pages to free: %d\n", num_pages_to_free);
     free_pages(num_pages_to_free);
   }
 
+  // thread_current()->segment_break = (uint8_t*) prev_break + increment;
+  // printf("old seg break: %d\n", prev_break);
+  // printf("new seg break: %d\n", prev_break + increment);
   thread_current()->segment_break = prev_break + increment;
   return prev_break;
 }
