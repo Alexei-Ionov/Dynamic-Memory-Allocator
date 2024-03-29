@@ -28,22 +28,19 @@ void* mm_malloc(size_t size) {
   void* seg_break = sbrk(0);
   unsigned int inc = 0;
   struct metadata *curr_metadata = NULL;
-  // if (curr_ptr != seg_break) {
-  //   primntf("curr_ptr %p\n", curr_ptr);
-  //   printf("seg break %p\n", seg_break);
-  // }
-  // printf("curr_ptr %p\n", curr_ptr);
-  // printf("seg break %p\n", seg_break);
+  // printf("curr ptr: %p\n", curr_ptr);
+  // printf("seg break: %p\n", seg_break);
+
   
   while ((curr_ptr + inc) < seg_break) { 
-    curr_metadata = (struct metadata*)curr_ptr;
+    curr_metadata = (struct metadata*)(curr_ptr + inc);
+    // printf("inc : %d\n", inc);
+    // printf("curr metadata size : %ld\n", curr_metadata->size);
     if (curr_metadata->free && curr_metadata->size >= size) {
-
-      
+      // printf("shouldnt be free\n");
       //if we can split it into two nodes
       leftover = curr_metadata->size - (size + METADATA_SIZE);
       //zero out the entire block first, regardless of whether we are adding in a new one or not
-    
       memset(curr_metadata + METADATA_SIZE, 0, curr_metadata->size);
      
       if (leftover >= 0) { 
@@ -84,12 +81,13 @@ void* mm_malloc(size_t size) {
   new_metadata.size = size;
   new_metadata.prev = NULL; //gets overwritten if this isn't tjhe first block
   if (curr_metadata != NULL) { //if this isnt the first block to be added
+    // printf("not adding the very first block\n");
     curr_metadata->next = new_metadata_addr;
     new_metadata.prev = curr_metadata;
-  }
+  } 
   new_metadata.next = NULL;
   new_metadata.free = false;
-
+  
   //add node into memory
   memcpy(new_metadata_addr, &new_metadata, METADATA_SIZE);
   //set all data to zero 
@@ -165,11 +163,10 @@ void mm_free(void* ptr) {
   }
   void *metadata_addr = ptr - METADATA_SIZE;
   struct metadata *m = (struct metadata*)metadata_addr;
-
-  
   size_t total_size_to_free = 0;
   bool left = m->prev != NULL && m->prev->free;
   bool right = m->next != NULL && m->next->free;
+  // printf("pass\n");
   if (left) { 
     total_size_to_free += (METADATA_SIZE + m->size);
   }
@@ -178,6 +175,10 @@ void mm_free(void* ptr) {
   }
   struct metadata* leftmost = left ? m->prev : m;
   struct metadata* rightmost = right ? m->next : m;
+  // printf("leftmost ptr: %p\n",leftmost);
+  // printf("m : %p\n",m);
+  // printf("rightmost ptr: %p\n",rightmost);
+
   free_block(leftmost, rightmost, total_size_to_free);
   
 }

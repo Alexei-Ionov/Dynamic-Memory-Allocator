@@ -41,16 +41,19 @@ static void load_alloc_functions() {
   mm_free = try_dlsym(handle, "mm_free");
 }
 static void test_free() { 
-  char* large1 = mm_malloc(200);
-  char* large2 = mm_malloc(100);
-  assert(large1 != NULL);
-  assert(large2 != NULL);
-  mm_free((void*) large1);
-  char* small1 = mm_malloc(50);
-  assert(small1 != NULL);
-  char* small2 = mm_malloc(50);
-  assert(small2 != NULL);
-  // mm_free((void*) large2);
+  char* block1 = mm_malloc(1);
+  char* block2 = mm_malloc(2);
+  char* block3 = mm_malloc(3);
+  char* block4 = mm_malloc(4);
+  assert(block1 != NULL);
+  assert(block2 != NULL);
+  assert(block3 != NULL);
+  assert(block4 != NULL);
+  
+  mm_free((void*) block4);
+  mm_free((void*) block3);
+  mm_free((void*) block2);
+  mm_free((void*) block1);
   // mm_free((void*) small1);
   // mm_free((void*) small2);
 
