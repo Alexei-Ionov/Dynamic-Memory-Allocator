@@ -40,7 +40,7 @@ void* mm_malloc(size_t size) {
         new_metadata.prev = curr_metadata;
         new_metadata.next = curr_metadata->next;
         new_metadata.free = true;
-        void* new_addr = (void*)curr_metadata + METADATA_SIZE + size;
+        void* new_addr = (void*)curr_metadata + METADATA_SIZE + curr_metadata->size;
         //add node into memory
         memcpy(new_addr, &new_metadata, METADATA_SIZE);
         //set all data to zero 
@@ -49,6 +49,9 @@ void* mm_malloc(size_t size) {
         //change pointers for the current and next nodes
         curr_metadata->next->prev = new_addr;
         curr_metadata->next = new_addr;
+        memset((void*)curr_metadata + METADATA_SIZE, 0, size); //zero out the block taking into account the new additionoal block
+      } else { 
+        memset((void*)curr_metadata + METADATA_SIZE, 0, curr_metadata->size); //zero out the entire new block to be used
       }
       curr_metadata->size = size;
       curr_metadata->free = false;
