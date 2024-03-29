@@ -106,7 +106,7 @@ void* mm_realloc(void* ptr, size_t size) {
     return NULL;
   }
   //this way we dont create a massive buf before checking whetehr the size isnt too big
-  if (sbrk(size) == NULL) { 
+  if (sbrk(size) == (void*)-1) { 
     return NULL;
   }
   /*
