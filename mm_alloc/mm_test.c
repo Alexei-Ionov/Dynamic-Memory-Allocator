@@ -50,10 +50,10 @@ static void test_free() {
   assert(block3 != NULL);
   assert(block4 != NULL);
   
-  mm_free((void*) block4);
-  mm_free((void*) block3);
-  mm_free((void*) block2);
   mm_free((void*) block1);
+  mm_free((void*) block2);
+  mm_free((void*) block3);
+  mm_free((void*) block4);
   // mm_free((void*) small1);
   // mm_free((void*) small2);
 

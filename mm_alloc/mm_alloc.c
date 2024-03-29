@@ -31,7 +31,7 @@ void* mm_malloc(size_t size) {
   // printf("curr ptr: %p\n", curr_ptr);
   // printf("seg break: %p\n", seg_break);
 
-  
+  // printf("round \n");
   while ((curr_ptr + inc) < seg_break) { 
     curr_metadata = (struct metadata*)(curr_ptr + inc);
     // printf("inc : %d\n", inc);
@@ -155,6 +155,9 @@ void free_block(struct metadata *leftmost, struct metadata *rightmost, size_t to
   leftmost->size = leftmost->size + total_size_to_free;
   leftmost->free = true;
   leftmost->next = rightmost->next; //we are freeing all struct right of the leftmost struct up to and including the rightmost struct
+  if (rightmost->next != NULL) { 
+    rightmost->next->prev = leftmost;
+  }
   memset((void*)leftmost + METADATA_SIZE, 0, leftmost->size);
 }
 void mm_free(void* ptr) {
@@ -165,9 +168,19 @@ void mm_free(void* ptr) {
   struct metadata *m = (struct metadata*)metadata_addr;
   size_t total_size_to_free = 0;
   bool left = m->prev != NULL && m->prev->free;
+  // if (m->prev == NULL) {
+  //   printf("left is null\n");
+  // }
+  // if (m->prev != NULL) {
+  //   if (!m->prev->free) { 
+  //     printf("left isnt free??\n");
+  //   }
+  // }
+  
   bool right = m->next != NULL && m->next->free;
   // printf("pass\n");
   if (left) { 
+    // printf("pass in left\n");
     total_size_to_free += (METADATA_SIZE + m->size);
   }
   if (right) { 
