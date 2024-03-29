@@ -89,20 +89,21 @@ void* mm_realloc(void* ptr, size_t size) {
   
   //set it equal to free temporarily just for mm_alloc
   m->free = true;
-  return (void*)1;
   void *new_addr = mm_malloc(size);
-  return new_addr;
-
-  //in the case where the same block gets used (such as in the case where smaller size reallocation)
-  if (new_addr == ptr) { 
-    m->free = false;
-    return (void*)1;
-  }
- 
-  if (new_addr == NULL) { 
+  if (new_addr == NULL) {
+    m->free = false; 
     return NULL;
   }
+  //in the case where the same block gets used (such as in the case where smaller size reallocation)
+  if (new_addr == ptr) { 
+    if (m->size >= size) {
+      memset(new_addr + size, 0, m->size - size);
+    }
+    return new_addr;
+  }
+  //otherwise, we found a new block. 
   //copy over contents of previous block to new block
+
   memcpy(new_addr, ptr, m->size);
   mm_free(ptr);
   return new_addr;
