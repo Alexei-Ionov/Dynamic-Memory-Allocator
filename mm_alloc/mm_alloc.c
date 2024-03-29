@@ -88,26 +88,34 @@ void* mm_realloc(void* ptr, size_t size) {
   }
 
   void *metadata_addr = ptr - METADATA_SIZE;
-  struct metadata *m = (struct metadata*)metadata_addr;
+  struct metadata *prev_metadata = (struct metadata*)metadata_addr;
   
   //set it equal to free temporarily just for mm_alloc
-  m->free = true;
+  prev_metadata->free = true;
   void *new_addr = mm_malloc(size);
   if (new_addr == NULL) {
-    m->free = false; 
+    prev_metadata->free = false; 
     return NULL;
   }
-  //if smaller block, zero out the rest
-  if (m->size >= size) {
-    memset(new_addr + size, 0, m->size - size);
-  }
-  //in the case where the same block gets used (such as in the case where smaller size reallocation)
+    //in the case where the same block gets used (such as in the case where smaller size reallocation)
   if (new_addr == ptr) { 
+    //if requested size is smaller 
+    prev_metadata->free = false;
+    if (size < prev_metadata->size) {
+      memset(new_addr + size, 0, prev_metadata->size - size);
+    }
     return new_addr;
   }
-  //otherwise, we found a new block. 
+  void *new_metadata_addr = new_addr - METADATA_SIZE;
+  struct metadata *new_metadata = (struct metadata*)new_metadata_addr;
+
+  //otherwise, we found a new block or created a new block!!!! ORR
   //copy over contents of previous block to new block
   memcpy(new_addr, ptr, size);
+  if (size < new_metadata->size) {
+    //zero out the leftover bytes since the new block is actually bigger than what we need 
+    memset(new_addr + size, 0, new_metadata->size - size);
+  } 
   mm_free(ptr);
   return new_addr;
 }
@@ -124,11 +132,6 @@ void mm_free(void* ptr) {
   }
   void *metadata_addr = ptr - METADATA_SIZE;
   struct metadata *m = (struct metadata*)metadata_addr;
-  
-  //can't free memory that's already been freed!
-  if (m->free) { 
-    return;
-  }
 
   struct metadata* leftmost = m;
   struct metadata* rightmost = m;
