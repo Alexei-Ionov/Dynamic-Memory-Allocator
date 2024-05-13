@@ -28,16 +28,10 @@ void* mm_malloc(size_t size) {
   void* seg_break = sbrk(0);
   unsigned int inc = 0;
   struct metadata *curr_metadata = NULL;
-  // printf("curr ptr: %p\n", curr_ptr);
-  // printf("seg break: %p\n", seg_break);
 
-  // printf("round \n");
   while ((curr_ptr + inc) < seg_break) { 
     curr_metadata = (struct metadata*)(curr_ptr + inc);
-    // printf("inc : %d\n", inc);
-    // printf("curr metadata size : %ld\n", curr_metadata->size);
     if (curr_metadata->free && curr_metadata->size >= size) {
-      // printf("shouldnt be free\n");
       //if we can split it into two nodes
       leftover = curr_metadata->size - (size + METADATA_SIZE);
       //zero out the entire block first, regardless of whether we are adding in a new one or not
@@ -54,9 +48,6 @@ void* mm_malloc(size_t size) {
         //add node into memory
         memcpy(new_addr, &new_metadata, METADATA_SIZE);
       
-        // //set all data to zero, redundant
-        // memset(new_addr + METADATA_SIZE, 0, leftover);
-
         //change pointers for the current and next nodes
         if (curr_metadata->next != NULL) {
           curr_metadata->next->prev = new_addr;
@@ -81,7 +72,6 @@ void* mm_malloc(size_t size) {
   new_metadata.size = size;
   new_metadata.prev = NULL; //gets overwritten if this isn't tjhe first block
   if (curr_metadata != NULL) { //if this isnt the first block to be added
-    // printf("not adding the very first block\n");
     curr_metadata->next = new_metadata_addr;
     new_metadata.prev = curr_metadata;
   } 
@@ -132,16 +122,10 @@ void* mm_realloc(void* ptr, size_t size) {
   if (new_addr == ptr) { 
     //if requested size is smaller 
     prev_metadata->free = false;
-    //unneccsarry cleaning
-    // if (size < prev_metadata->size) {
-    //   memset(new_addr + size, 0, prev_metadata->size - size);
-    // }
     memcpy(new_addr, &buf, size);
     return new_addr;
   }
-  // void *new_metadata_addr = new_addr - METADATA_SIZE;
-  // struct metadata *new_metadata = (struct metadata*)new_metadata_addr;
-
+ 
   //otherwise, we found a new block or created a new block!!!! 
   //copy over contents of previous block to new block
   if (size < prev_metadata->size) {
@@ -149,11 +133,6 @@ void* mm_realloc(void* ptr, size_t size) {
   } else { 
     memcpy(new_addr, ptr, prev_metadata->size); //otherwise if the requested size is bigger, we should copy over the entire thing. 
   }
-  
-  // if (size < new_metadata->size) {
-  //   //zero out the leftover bytes since the new block is actually bigger than what we need 
-  //   memset(new_addr + size, 0, new_metadata->size - size);
-  // } 
   mm_free(ptr);
   return new_addr;
 }
@@ -174,20 +153,9 @@ void mm_free(void* ptr) {
   void *metadata_addr = ptr - METADATA_SIZE;
   struct metadata *m = (struct metadata*)metadata_addr;
   size_t total_size_to_free = 0;
-  bool left = m->prev != NULL && m->prev->free;
-  // if (m->prev == NULL) {
-  //   printf("left is null\n");
-  // }
-  // if (m->prev != NULL) {
-  //   if (!m->prev->free) { 
-  //     printf("left isnt free??\n");
-  //   }
-  // }
-  
+  bool left = m->prev != NULL && m->prev->free;  
   bool right = m->next != NULL && m->next->free;
-  // printf("pass\n");
   if (left) { 
-    // printf("pass in left\n");
     total_size_to_free += (METADATA_SIZE + m->size);
   }
   if (right) { 
@@ -195,10 +163,6 @@ void mm_free(void* ptr) {
   }
   struct metadata* leftmost = left ? m->prev : m;
   struct metadata* rightmost = right ? m->next : m;
-  // printf("leftmost ptr: %p\n",leftmost);
-  // printf("m : %p\n",m);
-  // printf("rightmost ptr: %p\n",rightmost);
-
   free_block(leftmost, rightmost, total_size_to_free);
   
 }
